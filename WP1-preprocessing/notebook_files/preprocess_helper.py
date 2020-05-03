@@ -466,11 +466,12 @@ import matplotlib.pyplot as plt
 import matplotlib as mpl
 from matplotlib.colors import Normalize
 from cartopy.crs import Geodetic, EuroPP, PlateCarree, Mercator
-import Mrch2k20.plot_schiphol as plotschiphol
+import tools.plot_schiphol as plotschiphol
 #df_point = df_point.drop(df_point[df_point['alt']>1].index) #only ground
 def plot_netherlands():
-    ax = plt.axes(projection=EuroPP(), zorder=1)
-
+    
+    fig = plt.figure(figsize=(12,9)) # open matplotlib figure
+    ax = plt.axes(projection=EuroPP(), zorder=1) #
 
     land = NaturalEarthFeature(
                 category='cultural',
@@ -481,7 +482,7 @@ def plot_netherlands():
     ax.add_feature(land, zorder=2)
     ax.set_extent((3, 7.5, 51, 54))
     plotschiphol.plot_schiphol(ax)
-    return ax
+    return fig, ax
 
 def density_map(df_delft):
     #df_delft = df_delft.drop(df_delft[(df_delft['alt']<-1)|(df_delft['alt']>500)].index)#loc[df_delft.loc[:, 'alt'] < 10000]
@@ -493,13 +494,15 @@ def density_map(df_delft):
     gridylat =  np.arange(51.5, 52.9 + dylat, dylat)
     cmap = mpl.cm.Blues
     grid,gridx, gridy = np.histogram2d(lon, lat, bins=[gridxlon, gridylat])
-    ax = plot_netherlands()
+    fig, ax = plot_netherlands()
     barra = ax.pcolormesh(gridx, gridy, np.transpose(grid), cmap=cmap, zorder=2, transform= PlateCarree())
     #ax.scatter(lon, lat, s= 0.01, marker='o', color='r', zorder=4, transform= PlateCarree())
 
     plt.colorbar(barra)
-
     plt.show()
+
+    return fig, ax
+
 
 def unix2utc(ts):
     utc_time = datetime.utcfromtimestamp(ts)

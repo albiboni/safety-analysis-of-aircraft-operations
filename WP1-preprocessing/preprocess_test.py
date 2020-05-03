@@ -26,7 +26,7 @@ df = df.set_index(['icao', 'ts'])
 df = pss.dt_column(df)
 
 df_point = pss.remove_spoint(df, 60.0)  # 60 seconds
-df_point = pss.remove_traj(df_point, 60.0)  # 60 seconds, might be too short
+df_point = pss.remove_traj(df_point, 60.0, 60.0)  # 60 seconds, might be too short
 df_point = pss.divide_flights2(df_point)  #todo fix divide flights
 #df_use = df_point.drop(df_point[(df_point['alt']<-1)|(df_point['alt']>100)].index)
 #pss.density_map(df_use)
@@ -34,7 +34,9 @@ df_point = pss.divide_flights2(df_point)  #todo fix divide flights
 df_point = df_point.reset_index().set_index('traj')
 #np.array(df_point.reset_index().set_index('icao').index.unique())
 df_point = pss.remove_outlier(df_point)
-new_df = pss.smoother(df_point)  # compress information as well by storing info about spline
+
+new_df = pss.smoother(df_point)
+savetxt = new_df.loc[0,'phase'][:8]# compress information as well by storing info about spline
 a=0
 #new_df.to_csv("./Mrch2k20/pss_data.csv.gz", compression= 'gzip') #save file
 
@@ -53,6 +55,28 @@ interesting = df_point.loc['484F6D',:].reset_index().set_index('ts')
 interesting = interesting.loc[start[0]:end[0]]
 plt.plot(t_steps, spline(t_steps), '--', label='spline')
 plt.plot(interesting.index.values, interesting.loc[:,'gs'].values,label='original')
+plt.legend()
+plt.show()
+import matplotlib.pyplot as plt
+choose_parameter = "gs"
+example = new_df.set_index("icao").loc["484F6D"]
+print(example.loc[:, "phase"])  # review phases available for this aircraft
+phase = 0  # depending on aircraft there might be multiple phases
+number_points = example.loc[:, "n_points"][phase]
+parameter = example.loc[:, choose_parameter][phase]
+knots = parameter[1]
+spline = BSpline(knots, parameter[0], 3)
+t_steps = np.linspace(knots[0], knots[-1], int(number_points))
+df_point = df_point.reset_index().set_index("icao")
+interesting = df_point.loc["484F6D", :].reset_index().set_index("ts")
+interesting = interesting.loc[knots[0] : knots[-1]]
+#plt.plot(t_steps, spline(t_steps), "--", label="spline")
+parameter2 = interesting.loc[:, choose_parameter].values
+#trk[~np.isnan(trk)] = np.rad2deg(np.unwrap(np.deg2rad(trk)[~np.isnan(trk)]))
+plt.plot(
+    interesting.index.values, parameter2, label="original",
+)
+
 plt.legend()
 plt.show()
 '''
